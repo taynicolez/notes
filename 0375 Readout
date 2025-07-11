@@ -16,19 +16,38 @@ SAML authentication manipulation
 2) no more out of band error, taken to vip screen
 rec: respnses should be validated with strict manipulation protection, binding them to the original session and/or user.
     emsure saml response cannotr be reused across different sessions or devices.
+why:  If an attacker can manipulate or reuse a SAML token, they could gain unauthorized access to resources, impersonate users, or perform actions on behalf of legitimate users, leading to significant security breaches. Implementing measures such as token expiration, signature validation, and binding constraints helps ensure that tokens are only valid for a specific session and cannot be tampered with or reused maliciously.
+
+rec:  implement strict token expiration policies to ensure tokens are valid only for a limited time and require re-authentication after expiration. Additionally, enforce signature validation and use secure bindings (like HTTP-POST) to ensure that tokens are transmitted securely and cannot be tampered with during transit.
 
 weak saml encryption
 1) capture token and view it is easily decrypted
 rec: SAML responses should be encrypted, we recommend using an encryption algorithm, it is best practice to use SHA-384, SHA3384, SHA-512 or SHA3-512, instead of base64 and/or adding hashing on top of the base64 to prevent data exposure.
 
+best practice:
+Base64 is an encoding scheme, not encryption, and it only obscures data without providing security. Relying solely on Base64 makes your data easily reversible, exposing sensitive information to unauthorized access. Best practices recommend using strong encryption algorithms (like AES) to ensure data confidentiality and integrity, as they provide robust protection against attacks. Combining encryption with secure key management further enhances security, making it significantly harder for attackers to access the original data.
+
 Username enumeration
 1) brute force the usernames including valid pids, observe response time differnces.
 rec: ensure uniform response times 
+
+why: Uniform response times between valid and invalid usernames help prevent attackers from gaining insights into which usernames exist in your system. If valid usernames return responses faster or slower than invalid ones, it creates a timing attack vector, allowing attackers to infer the validity of usernames based on response behavior. By ensuring consistent response times, you make it significantly harder for attackers to effectively brute-force usernames, thereby enhancing the security of your authentication mechanism. Implementing measures like rate limiting and adding artificial delays can further mitigate this risk.
+
+best practice:
+1)Introduce a fixed delay for all responses, regardless of whether the username is valid or invalid. This can be achieved by adding a sleep function that ensures every request takes a minimum amount of time to process.
+2)Implement rate limiting to restrict the number of login attempts from a single IP address or account within a specific timeframe, making brute-force attacks less feasible.
 
 verbose error messages
 1) navigate to a fake extension and view verbose error message including serverlet information
 rec) implement errror handling to return generic error messaging
 
+best practice:
+If a user navigates to a fake page and receives a detailed error message, it can provide insights into the underlying technology and potential weaknesses in your system. Keeping error messages generic helps to minimize the attack surface by not disclosing unnecessary information, thereby enhancing the overall security posture of your application. It's best to log detailed errors internally while presenting users with user-friendly, non-informative messages. Just because I could not exploit the servlet doesnt mean it is totally safe.
+
 Arbitray Json 
 1) insert arbitrary input in the request and see it is a 200 reponse
 rec: It is generally considered best practice to sanitize JSON inputs and return an error message such as 404 or 400 if the JSON is unexpected, even if the arbitrary JSON is not accepted on the server side.
+
+why: If an attacker can manipulate the JSON data sent to the client, they might exploit it to execute malicious scripts, leading to Cross-Site Scripting (XSS) vulnerabilities. Additionally, if the client-side code processes this arbitrary JSON without proper validation or sanitization, it could inadvertently expose sensitive information or allow unauthorized actions. Even if the server doesn't reflect these changes, the client-side application can still be compromised, making it crucial to enforce strict validation and sanitization of any JSON data processed on the client side.
+
+rec: To fix the issue of allowing arbitrary JSON on the client side, implement strict validation and sanitization of all incoming JSON data to ensure it adheres to expected formats and values. Additionally, use Content Security Policy (CSP) headers to mitigate the risk of XSS attacks by controlling which scripts can be executed in the client environment.
